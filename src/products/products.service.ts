@@ -25,4 +25,22 @@ export class ProductsService {
       },
     });
   }
+  async updateProduct(id: number, updateProductDto: CreateProductDto) {
+    return this.prisma.product.update({
+      where: { id },
+      data: {
+        name: updateProductDto.name,
+        description: updateProductDto.description || null,
+        price: updateProductDto.price,
+        category: updateProductDto.category,
+        isActive: updateProductDto.isActive ?? true,
+      },
+    });
+  }
+
+  async deleteProduct(id: number) {
+    return this.prisma.product.delete({
+      where: { id },
+    });
+  }
 }
