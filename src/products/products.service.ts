@@ -27,7 +27,7 @@ export class ProductsService {
   }
   async updateProduct(id: number, updateProductDto: CreateProductDto) {
     return this.prisma.product.update({
-      where: { id },
+      where: { id: id },
       data: {
         name: updateProductDto.name,
         description: updateProductDto.description || null,

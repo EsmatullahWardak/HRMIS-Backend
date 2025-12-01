@@ -24,6 +24,7 @@ export class ProductsController {
   async getAllProducts() {
     return this.productsService.getAllProducts();
   }
+
   @Put(':id')
   async updateProduct(
     @Param('id') id: string,
