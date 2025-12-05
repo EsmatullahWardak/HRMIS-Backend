@@ -29,8 +29,10 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async getAllUsers() {
-    const users = await this.prisma.user.findMany();
+  async getActiveUsers() {
+    const users = await this.prisma.user.findMany({
+      where: { is_active: true },
+    });
     return users;
   }
 

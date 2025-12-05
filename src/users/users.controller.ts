@@ -26,10 +26,9 @@ export class UsersController {
     return this.usersService.createUser(createData);
   }
 
-  @Get()
+  @Get('active')
   async getAllUsers() {
-    console.log('Getting all users');
-    return this.usersService.getAllUsers();
+    return this.usersService.getActiveUsers();
   }
 
   @Put(':id')
