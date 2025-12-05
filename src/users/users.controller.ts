@@ -30,6 +30,10 @@ export class UsersController {
   async getAllUsers() {
     return this.usersService.getActiveUsers();
   }
+  @Get('inactive')
+  async getInactiveUsers() {
+    return this.usersService.getInactiveUsers();
+  }
 
   @Put(':id')
   async updateUser(

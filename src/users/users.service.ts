@@ -35,6 +35,12 @@ export class UsersService {
     });
     return users;
   }
+  async getInactiveUsers() {
+    const users = await this.prisma.user.findMany({
+      where: { is_active: false },
+    });
+    return users;
+  }
 
   async deleteUser(id: number) {
     return this.prisma.user.delete({
