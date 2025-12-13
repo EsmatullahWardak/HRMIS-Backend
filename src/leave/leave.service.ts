@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-// import { CreateLeaveDto } from './dto/create-leave.dto';
 import { CreateLeaveDto } from './dto/create-leave.dto';
+import { UpdateLeaveStatusDto } from './dto/update-leave-status.dto';
 
 @Injectable()
 export class LeaveService {
