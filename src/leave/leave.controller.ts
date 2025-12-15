@@ -42,7 +42,7 @@ export class LeaveController {
     return this.leaveService.getMonthlyReport(Number(userId), month);
   }
 
-  // ✅ CSV download
+  // ✅ CSV download for single user
   @Get('report/monthly/export')
   async exportMonthlyReportCsv(
     @Query('month') month: string,
@@ -80,6 +80,48 @@ export class LeaveController {
         .join('\n') + '\n';
 
     const filename = `leave-report-${month}-user-${userId}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(csv);
+  }
+
+  // ✅ CSV download for ALL users
+  @Get('report/monthly/export-all')
+  async exportAllLeavesForMonth(
+    @Query('month') month: string,
+    @Res() res: Response,
+  ) {
+    const leaves = await this.leaveService.getAllLeavesForMonth(month);
+
+    const header = [
+      'ID',
+      'User ID',
+      'Type',
+      'Status',
+      'Start Date',
+      'End Date',
+      'Days In Month',
+      'Reason',
+    ];
+
+    const rows = leaves.map((lv: any) => [
+      lv.id,
+      lv.userId ?? '-',
+      lv.type,
+      lv.status,
+      new Date(lv.startDate).toISOString().slice(0, 10),
+      new Date(lv.endDate).toISOString().slice(0, 10),
+      lv.daysInMonth,
+      (lv.reason ?? '').replaceAll('"', '""'),
+    ]);
+
+    const csv =
+      [header, ...rows]
+        .map((r) => r.map((x) => `"${x}"`).join(','))
+        .join('\n') + '\n';
+
+    const filename = `leave-report-${month}-all-users.csv`;
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

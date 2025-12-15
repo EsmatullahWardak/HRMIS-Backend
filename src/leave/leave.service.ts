@@ -32,7 +32,7 @@ export class LeaveService {
     });
   }
 
-  // ✅ Monthly report data
+  // ✅ Monthly report data (for single user)
   async getMonthlyReport(userId: number, month: string) {
     const [yearStr, monthStr] = month.split('-');
     const year = Number(yearStr);
@@ -90,5 +90,46 @@ export class LeaveService {
       byType,
       leaves: rows,
     };
+  }
+
+  // ✅ Monthly report for ALL users
+  async getAllLeavesForMonth(month: string) {
+    const [yearStr, monthStr] = month.split('-');
+    const year = Number(yearStr);
+    const m = Number(monthStr);
+
+    const monthStart = new Date(Date.UTC(year, m - 1, 1, 0, 0, 0));
+    const monthEnd = new Date(Date.UTC(year, m, 0, 23, 59, 59));
+
+    const leaves = await this.prisma.leave.findMany({
+      where: {
+        startDate: { lte: monthEnd },
+        endDate: { gte: monthStart },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const clamp = (d: Date, min: Date, max: Date) =>
+      new Date(Math.min(max.getTime(), Math.max(min.getTime(), d.getTime())));
+    const daysInclusive = (a: Date, b: Date) =>
+      Math.floor((b.getTime() - a.getTime()) / msPerDay) + 1;
+
+    return leaves.map((lv) => {
+      const s = clamp(new Date(lv.startDate), monthStart, monthEnd);
+      const e = clamp(new Date(lv.endDate), monthStart, monthEnd);
+      const daysInMonth = daysInclusive(s, e);
+
+      return {
+        id: lv.id,
+        userId: lv.userId,
+        type: lv.type,
+        status: lv.status,
+        startDate: lv.startDate,
+        endDate: lv.endDate,
+        reason: lv.reason,
+        daysInMonth,
+      };
+    });
   }
 }
