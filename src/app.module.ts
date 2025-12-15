@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { LoansModule } from './loans/loans.module';
+import { LeaveModule } from './leave/leave.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { LoansModule } from './loans/loans.module';
     ProductsModule,
     DashboardModule,
     LoansModule,
+    LeaveModule,
   ],
   controllers: [AppController],
   providers: [AppService],

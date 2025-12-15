@@ -3,13 +3,14 @@ import { LeaveService } from './leave.service';
 import { CreateLeaveDto } from './dto/create-leave.dto';
 import { UpdateLeaveStatusDto } from './dto/update-leave-status.dto';
 
-@Controller('leaves') // base route: /leaves
+@Controller('leave') // base route: /leaves
 export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
 
   // POST /leaves
   @Post()
   create(@Body() createLeaveDto: CreateLeaveDto) {
+    // return createLeaveDto;
     return this.leaveService.createLeave(createLeaveDto);
   }
 
