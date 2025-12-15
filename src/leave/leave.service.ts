@@ -32,14 +32,14 @@ export class LeaveService {
     });
   }
 
-  // ✅ Monthly Report
+  // ✅ Monthly report data
   async getMonthlyReport(userId: number, month: string) {
     const [yearStr, monthStr] = month.split('-');
     const year = Number(yearStr);
-    const m = Number(monthStr); // 1-12
+    const m = Number(monthStr);
 
     const monthStart = new Date(Date.UTC(year, m - 1, 1, 0, 0, 0));
-    const monthEnd = new Date(Date.UTC(year, m, 0, 23, 59, 59)); // last day of month
+    const monthEnd = new Date(Date.UTC(year, m, 0, 23, 59, 59));
 
     const leaves = await this.prisma.leave.findMany({
       where: {
@@ -51,10 +51,8 @@ export class LeaveService {
     });
 
     const msPerDay = 24 * 60 * 60 * 1000;
-
     const clamp = (d: Date, min: Date, max: Date) =>
       new Date(Math.min(max.getTime(), Math.max(min.getTime(), d.getTime())));
-
     const daysInclusive = (a: Date, b: Date) =>
       Math.floor((b.getTime() - a.getTime()) / msPerDay) + 1;
 

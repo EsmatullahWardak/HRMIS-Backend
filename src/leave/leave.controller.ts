@@ -6,13 +6,13 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 
 import { LeaveService } from './leave.service';
 import { CreateLeaveDto } from './dto/create-leave.dto';
 import { UpdateLeaveStatusDto } from './dto/update-leave-status.dto';
-import { Res } from '@nestjs/common';
-import type { Response } from 'express';
 
 @Controller('leave')
 export class LeaveController {
@@ -33,7 +33,16 @@ export class LeaveController {
     return this.leaveService.updateLeaveStatus(+id, dto.status);
   }
 
-  // ✅ PASTE IT HERE (inside the class)
+  // ✅ JSON report
+  @Get('report/monthly')
+  getMonthlyReport(
+    @Query('month') month: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.leaveService.getMonthlyReport(Number(userId), month);
+  }
+
+  // ✅ CSV download
   @Get('report/monthly/export')
   async exportMonthlyReportCsv(
     @Query('month') month: string,
