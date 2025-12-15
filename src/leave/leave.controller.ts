@@ -25,3 +25,17 @@ export class LeaveController {
     return this.leaveService.updateLeaveStatus(+id, dto.status);
   }
 }
+
+// leave.controller.ts
+import { Query } from '@nestjs/common';
+
+// ...
+
+@Get('report/monthly')
+getMonthlyReport(
+  @Query('month') month: string,
+  @Query('userId') userId: string, // temporary if you don’t use auth yet
+) {
+  // If you already have auth, we will replace this with req.user.id
+  return this.leaveService.getMonthlyReport(Number(userId), month);
+}

@@ -35,3 +35,69 @@ export class LeaveService {
     });
   }
 }
+
+
+// leave.service.ts
+async getMonthlyReport(userId: number, month: string) {
+  // month format: "YYYY-MM"
+  const [yearStr, monthStr] = month.split('-');
+  const year = Number(yearStr);
+  const m = Number(monthStr); // 1-12
+
+  const monthStart = new Date(Date.UTC(year, m - 1, 1, 0, 0, 0));
+  const monthEnd = new Date(Date.UTC(year, m, 0, 23, 59, 59)); // last day of month
+
+  // Fetch leaves that overlap this month:
+  // startDate <= monthEnd AND endDate >= monthStart
+  const leaves = await this.prisma.leave.findMany({
+    where: {
+      userId,
+      startDate: { lte: monthEnd },
+      endDate: { gte: monthStart },
+    },
+    orderBy: { startDate: 'asc' },
+  });
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+
+  const clamp = (d: Date, min: Date, max: Date) =>
+    new Date(Math.min(max.getTime(), Math.max(min.getTime(), d.getTime())));
+
+  const daysInclusive = (a: Date, b: Date) =>
+    Math.floor((b.getTime() - a.getTime()) / msPerDay) + 1;
+
+  const byStatus: Record<string, number> = {};
+  const byType: Record<string, number> = {};
+  let totalDays = 0;
+
+  const rows = leaves.map((lv) => {
+    const s = clamp(new Date(lv.startDate), monthStart, monthEnd);
+    const e = clamp(new Date(lv.endDate), monthStart, monthEnd);
+    const daysInMonth = daysInclusive(s, e);
+
+    totalDays += daysInMonth;
+    byStatus[lv.status] = (byStatus[lv.status] ?? 0) + daysInMonth;
+    byType[lv.type] = (byType[lv.type] ?? 0) + daysInMonth;
+
+    return {
+      id: lv.id,
+      type: lv.type,
+      status: lv.status,
+      startDate: lv.startDate,
+      endDate: lv.endDate,
+      reason: lv.reason,
+      daysInMonth,
+    };
+  });
+
+  return {
+    month,
+    userId,
+    monthStart,
+    monthEnd,
+    totalDays,
+    byStatus,
+    byType,
+    leaves: rows,
+  };
+}
