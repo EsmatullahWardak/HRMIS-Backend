@@ -10,7 +10,6 @@ export class LeaveController {
   // POST /leaves
   @Post()
   create(@Body() createLeaveDto: CreateLeaveDto) {
-    // return createLeaveDto;
     return this.leaveService.createLeave(createLeaveDto);
   }
 
