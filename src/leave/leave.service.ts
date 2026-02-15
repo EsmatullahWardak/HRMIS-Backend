@@ -25,6 +25,13 @@ export class LeaveService {
     });
   }
 
+  async getLeavesForUser(userId: number) {
+    return this.prisma.leave.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async updateLeaveStatus(id: number, status: string) {
     return this.prisma.leave.update({
       where: { id },

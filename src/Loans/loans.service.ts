@@ -29,4 +29,13 @@ export class LoansService {
       },
     });
   }
+
+  async getLoansForUser(userId: number) {
+    return this.prisma.loan.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }
