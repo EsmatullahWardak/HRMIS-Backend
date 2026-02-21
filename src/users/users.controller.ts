@@ -15,7 +15,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('MANAGER', 'OFFICER')
+@Roles('ADMIN')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -28,6 +28,7 @@ export class UsersController {
       email: string;
       password: string;
       is_active: boolean;
+      role: 'ADMIN' | 'OFFICER' | 'EMPLOYEE';
     },
   ) {
     return this.usersService.createUser(createData);
@@ -39,12 +40,14 @@ export class UsersController {
     @Query('limit') limit = '10',
     @Query('search') search = '',
     @Query('status') status = '',
+    @Query('role') role = '',
   ) {
     return this.usersService.findAll({
       page: Number(page),
       limit: Number(limit),
       search,
       status,
+      role,
     });
   }
 
@@ -65,7 +68,13 @@ export class UsersController {
   @Put(':id')
   async updateUser(
     @Param('id') id: string,
-    @Body() updateData: { name: string; email: string; is_active?: boolean },
+    @Body()
+    updateData: {
+      name: string;
+      email: string;
+      is_active?: boolean;
+      role?: 'ADMIN' | 'OFFICER' | 'EMPLOYEE';
+    },
   ) {
     return this.usersService.updateUser(+id, updateData);
   }

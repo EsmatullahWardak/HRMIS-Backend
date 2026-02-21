@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +15,8 @@ export class AuthService {
 
   async registerUser(data: RegisterDto) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
+    const usersCount = await this.prisma.user.count();
+    const role: Role = usersCount === 0 ? Role.ADMIN : Role.EMPLOYEE;
 
     try {
       const user = await this.prisma.user.create({
@@ -22,6 +24,7 @@ export class AuthService {
           name: data.name,
           email: data.email,
           password: hashedPassword,
+          role,
         },
       });
 
@@ -58,7 +61,8 @@ export class AuthService {
     // 4. Generate JWT token with name and email
     const payload = {
       name: user.name,
-      email: user.email
+      email: user.email,
+      role: user.role,
     };
     const auth_token = this.jwtService.sign(payload);
 

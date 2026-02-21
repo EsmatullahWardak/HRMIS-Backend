@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -11,6 +12,7 @@ export class UsersService {
     email: string;
     password: string;
     is_active: boolean;
+    role: 'ADMIN' | 'OFFICER' | 'EMPLOYEE';
   }) {
     const hashedPassword = await bcrypt.hash(createData.password, 10);
 
@@ -20,12 +22,12 @@ export class UsersService {
         email: createData.email,
         password: hashedPassword,
         is_active: createData.is_active,
+        role: createData.role,
       },
     });
 
     // Return user without password
     const { password, ...userWithoutPassword } = user;
-    console.log(userWithoutPassword);
     return userWithoutPassword;
   }
 
@@ -47,9 +49,15 @@ export class UsersService {
     limit: number;
     search?: string;
     status?: string;
+    role?: string;
   }) {
-    const { page, limit, search = '', status = '' } = params;
+    const { page, limit, search = '', status = '', role = '' } = params;
     const skip = (page - 1) * limit;
+    const normalizedRole = role.toUpperCase();
+    const isRoleFilterValid =
+      normalizedRole === Role.ADMIN ||
+      normalizedRole === Role.OFFICER ||
+      normalizedRole === Role.EMPLOYEE;
 
     const where: any = {
       ...(search
@@ -62,6 +70,7 @@ export class UsersService {
         : {}),
       ...(status === 'active' ? { is_active: true } : {}),
       ...(status === 'inactive' ? { is_active: false } : {}),
+      ...(isRoleFilterValid ? { role: normalizedRole } : {}),
     };
 
     const [data, total] = await Promise.all([
@@ -86,16 +95,23 @@ export class UsersService {
   }
 
   async getSummary() {
-    const [total, active, inactive] = await Promise.all([
+    const [total, active, inactive, admins, officers, employees] =
+      await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: { is_active: true } }),
       this.prisma.user.count({ where: { is_active: false } }),
+      this.prisma.user.count({ where: { role: Role.ADMIN } }),
+      this.prisma.user.count({ where: { role: Role.OFFICER } }),
+      this.prisma.user.count({ where: { role: Role.EMPLOYEE } }),
     ]);
 
     return {
       total,
       active,
       inactive,
+      admins,
+      officers,
+      employees,
     };
   }
 
@@ -107,7 +123,12 @@ export class UsersService {
 
   async updateUser(
     id: number,
-    updateData: { name: string; email: string; is_active?: boolean },
+    updateData: {
+      name: string;
+      email: string;
+      is_active?: boolean;
+      role?: 'ADMIN' | 'OFFICER' | 'EMPLOYEE';
+    },
   ) {
     return this.prisma.user.update({
       where: { id: id },
