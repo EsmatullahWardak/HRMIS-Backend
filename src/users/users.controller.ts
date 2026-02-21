@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -30,6 +31,26 @@ export class UsersController {
     },
   ) {
     return this.usersService.createUser(createData);
+  }
+
+  @Get()
+  findAll(
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+    @Query('search') search = '',
+    @Query('status') status = '',
+  ) {
+    return this.usersService.findAll({
+      page: Number(page),
+      limit: Number(limit),
+      search,
+      status,
+    });
+  }
+
+  @Get('summary')
+  getSummary() {
+    return this.usersService.getSummary();
   }
 
   @Get('active')

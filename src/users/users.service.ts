@@ -42,6 +42,63 @@ export class UsersService {
     return users;
   }
 
+  async findAll(params: {
+    page: number;
+    limit: number;
+    search?: string;
+    status?: string;
+  }) {
+    const { page, limit, search = '', status = '' } = params;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+      ...(status === 'active' ? { is_active: true } : {}),
+      ...(status === 'inactive' ? { is_active: false } : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getSummary() {
+    const [total, active, inactive] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.count({ where: { is_active: true } }),
+      this.prisma.user.count({ where: { is_active: false } }),
+    ]);
+
+    return {
+      total,
+      active,
+      inactive,
+    };
+  }
+
   async deleteUser(id: number) {
     return this.prisma.user.delete({
       where: { id: id },
