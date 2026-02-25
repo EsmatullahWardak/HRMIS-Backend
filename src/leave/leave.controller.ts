@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Patch,
   Post,
   Query,
   Res,
+  UnauthorizedException,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -25,53 +27,68 @@ export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
 
   @Post()
-  @Roles('EMPLOYEE', 'OFFICER', 'MANAGER')
-  create(@Req() req: any, @Body() createLeaveDto: CreateLeaveDto) {
-    const userId = req.user?.sub;
-    const role = req.user?.role;
-    const payload =
-      role === 'EMPLOYEE'
-        ? { ...createLeaveDto, userId }
-        : { ...createLeaveDto, userId: createLeaveDto.userId ?? userId };
+  @Roles('EMPLOYEE', 'OFFICER')
+  async create(@Req() req: any, @Body() createLeaveDto: CreateLeaveDto) {
+    const userId = await this.leaveService.getUserIdByEmail(req.user?.email);
+    if (!userId) {
+      throw new UnauthorizedException('Invalid authenticated user');
+    }
+    const payload = { ...createLeaveDto, userId };
     return this.leaveService.createLeave(payload);
   }
 
   @Get()
-  @Roles('EMPLOYEE', 'OFFICER', 'MANAGER')
-  findAll(@Req() req: any) {
-    if (req.user?.role === 'EMPLOYEE') {
-      return this.leaveService.getLeavesForUser(req.user.sub);
+  @Roles('EMPLOYEE', 'OFFICER', 'ADMIN')
+  async findAll(@Req() req: any) {
+    if (req.user?.role === 'ADMIN') {
+      return this.leaveService.getAllLeaves();
     }
-    return this.leaveService.getAllLeaves();
+    const userId = await this.leaveService.getUserIdByEmail(req.user?.email);
+    if (!userId) {
+      throw new UnauthorizedException('Invalid authenticated user');
+    }
+    return this.leaveService.getLeavesForUser(userId);
   }
 
   @Patch(':id/status')
-  @Roles('OFFICER', 'MANAGER')
+  @Roles('ADMIN')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateLeaveStatusDto) {
+    const allowed = ['Approved', 'Rejected'];
+    if (!allowed.includes(dto.status)) {
+      throw new ForbiddenException('Only Approved or Rejected status is allowed');
+    }
     return this.leaveService.updateLeaveStatus(+id, dto.status);
+  }
+
+  @Get('pending/count')
+  @Roles('ADMIN')
+  async getPendingCount() {
+    const count = await this.leaveService.getPendingCount();
+    return { count };
   }
 
   // ? JSON report
   @Get('report/monthly')
-  @Roles('EMPLOYEE', 'OFFICER', 'MANAGER')
-  getMonthlyReport(
+  @Roles('EMPLOYEE', 'OFFICER', 'ADMIN')
+  async getMonthlyReport(
     @Req() req: any,
     @Query('month') month: string,
     @Query('userId') userId: string,
   ) {
     const role = req.user?.role;
     const resolvedUserId =
-      role === 'EMPLOYEE'
-        ? req.user.sub
-        : userId
-          ? Number(userId)
-          : req.user.sub;
+      role === 'ADMIN' && userId
+        ? Number(userId)
+        : await this.leaveService.getUserIdByEmail(req.user?.email);
+    if (!resolvedUserId) {
+      throw new UnauthorizedException('Invalid authenticated user');
+    }
     return this.leaveService.getMonthlyReport(resolvedUserId, month);
   }
 
   // ? CSV download for single user
   @Get('report/monthly/export')
-  @Roles('EMPLOYEE', 'OFFICER', 'MANAGER')
+  @Roles('EMPLOYEE', 'OFFICER', 'ADMIN')
   async exportMonthlyReportCsv(
     @Req() req: any,
     @Query('month') month: string,
@@ -79,12 +96,15 @@ export class LeaveController {
     @Res() res: Response,
   ) {
     const role = req.user?.role;
-    const resolvedUserId =
-      role === 'EMPLOYEE'
-        ? req.user.sub
-        : userId
-          ? Number(userId)
-          : req.user.sub;
+    let resolvedUserId: number | null = null;
+    if (role === 'ADMIN' && userId) {
+      resolvedUserId = Number(userId);
+    } else {
+      resolvedUserId = await this.leaveService.getUserIdByEmail(req.user?.email);
+    }
+    if (!resolvedUserId) {
+      throw new UnauthorizedException('Invalid authenticated user');
+    }
 
     const report = await this.leaveService.getMonthlyReport(
       resolvedUserId,
@@ -125,7 +145,7 @@ export class LeaveController {
 
   // ? CSV download for ALL users
   @Get('report/monthly/export-all')
-  @Roles('OFFICER', 'MANAGER')
+  @Roles('ADMIN')
   async exportAllLeavesForMonth(
     @Query('month') month: string,
     @Res() res: Response,

@@ -13,10 +13,18 @@ export class LeaveService {
         startDate: new Date(createLeaveDto.startDate),
         endDate: new Date(createLeaveDto.endDate),
         reason: createLeaveDto.reason || null,
-        status: createLeaveDto.status || 'Pending',
+        status: 'Pending',
         userId: createLeaveDto.userId || null,
       },
     });
+  }
+
+  async getUserIdByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    return user?.id ?? null;
   }
 
   async getAllLeaves() {
@@ -36,6 +44,12 @@ export class LeaveService {
     return this.prisma.leave.update({
       where: { id },
       data: { status },
+    });
+  }
+
+  async getPendingCount() {
+    return this.prisma.leave.count({
+      where: { status: 'Pending' },
     });
   }
 
