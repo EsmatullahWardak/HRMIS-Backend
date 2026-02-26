@@ -9,6 +9,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { LoansModule } from './loans/loans.module';
 import { LeaveModule } from './leave/leave.module';
 import { OvertimeModule } from './overtime/overtime.module';
+import { ShiftChangeModule } from './shift-change/shift-change.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { OvertimeModule } from './overtime/overtime.module';
     LoansModule,
     LeaveModule,
     OvertimeModule,
+    ShiftChangeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -79,3 +79,15 @@ model Overtime {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model ShiftChange {
+  id             Int      @id @default(autoincrement())
+  shiftDate      DateTime
+  currentShift   String
+  requestedShift String
+  reason         String?
+  status         String   @default("Pending") // "Pending", "Approved", "Rejected"
+  userId         Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
