@@ -11,7 +11,7 @@ export class LoansController {
   constructor(private readonly loansService: LoansService) {}
 
   @Post()
-  @Roles('EMPLOYEE', 'OFFICER', 'MANAGER')
+  @Roles('EMPLOYEE', 'OFFICER', 'ADMIN')
   async createLoan(@Req() req: any, @Body() createLoanDto: CreateLoanDto) {
     const userId = req.user?.sub;
     const role = req.user?.role;
@@ -23,7 +23,7 @@ export class LoansController {
   }
 
   @Get()
-  @Roles('EMPLOYEE', 'OFFICER', 'MANAGER')
+  @Roles('EMPLOYEE', 'OFFICER', 'ADMIN')
   async getAllLoans(@Req() req: any) {
     if (req.user?.role === 'EMPLOYEE') {
       return this.loansService.getLoansForUser(req.user.sub);
