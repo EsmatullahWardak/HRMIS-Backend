@@ -5,6 +5,7 @@ export class CreateLoanDto {
   monthlyDeduction: number;
   status?: string;
   guarantor?: string;
+  guarantorName?: string;
   notes?: string;
   progress?: number;
   userId?: number;

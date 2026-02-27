@@ -59,7 +59,7 @@ export class UsersController {
   }
 
   @Get('active')
-  @Roles('ADMIN', 'OFFICER')
+  @Roles('ADMIN', 'OFFICER', 'EMPLOYEE')
   async getAllUsers() {
     return this.usersService.getActiveUsers();
   }
