@@ -14,9 +14,19 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
+  MANAGER
   OFFICER
   EMPLOYEE
+}
+
+model user{
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  is_active Boolean  @default(true)
+  role      Role     @default(EMPLOYEE)
 }
 
 model User {
@@ -24,7 +34,6 @@ model User {
   name      String?
   email     String   @unique
   password  String
-  role      Role     @default(EMPLOYEE)
   createdAt DateTime @default(now())
   is_active Boolean  @default(true)
 }
@@ -67,27 +76,4 @@ model Leave {
   userId      Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-model Overtime {
-  id          Int      @id @default(autoincrement())
-  workDate    DateTime
-  hours       Float
-  reason      String?
-  status      String   @default("Pending") // "Pending", "Approved", "Rejected"
-  userId      Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model ShiftChange {
-  id             Int      @id @default(autoincrement())
-  shiftDate      DateTime
-  currentShift   String
-  requestedShift String
-  reason         String?
-  status         String   @default("Pending") // "Pending", "Approved", "Rejected"
-  userId         Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
 }

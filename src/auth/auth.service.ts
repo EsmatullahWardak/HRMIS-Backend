@@ -1,10 +1,9 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
-import { Prisma, Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -15,29 +14,16 @@ export class AuthService {
 
   async registerUser(data: RegisterDto) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    const usersCount = await this.prisma.user.count();
-    const role: Role = usersCount === 0 ? Role.ADMIN : Role.EMPLOYEE;
 
-    try {
-      const user = await this.prisma.user.create({
-        data: {
-          name: data.name,
-          email: data.email,
-          password: hashedPassword,
-          role,
-        },
-      });
+    const user = await this.prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+      },
+    });
 
-      return user;
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('Email already exists');
-      }
-      throw error;
-    }
+    return user;
   }
 
   async loginUser(data: LoginDto) {
@@ -60,10 +46,12 @@ export class AuthService {
 
     // 4. Generate JWT token with name and email
     const payload = {
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
+  sub: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+};
+
     const auth_token = this.jwtService.sign(payload);
 
     // 5. Return user data (without password) and authToken
